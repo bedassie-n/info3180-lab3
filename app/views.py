@@ -8,7 +8,7 @@ This file creates your application.
 from app import app, mail
 from flask import render_template, request, redirect, url_for, flash
 from flask_mail import Message
-from form import ContactForm
+from app.form import ContactForm
 
 
 ###
@@ -29,11 +29,23 @@ def about():
 @app.route('/contact', methods=('GET', 'POST'))
 def contact():
     form = ContactForm()
-    if request.method = "POST":
+    if request.method == "POST":
         if form.validate_on_submit():
-            return redirect('/success')
+            msg = Message(request.form['subject'], sender=(form.name.data,
+            form.email.data),recipients=["to@example.com"])
+            msg.body = form.message.data
+            mail.send(msg)
+            flash(u'Your email wes sent successfully','alert alert-success')
+            return redirect(url_for('home'))
+        else:
+            flash_errors(form)
     return render_template('contact.html', form=form)
 
+
+def flash_errors(form):
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(u"Error in the %s field - %s" % (getattr(form, field).label.text, error), 'danger')
 
 ###
 # The functions below should be applicable to all Flask apps.
@@ -47,7 +59,7 @@ def flash_errors(form):
             flash(u"Error in the %s field - %s" % (
                 getattr(form, field).label.text,
                 error
-            ), 'danger')
+            ), ' alert alert-danger')
 
 
 @app.route('/<file_name>.txt')
